@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Horario Escolar</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4ff;
+    --surface: #ffffff;
+    --primary: #5b6ef5;
+    --primary-light: #eef0ff;
+    --accent: #ff6b9d;
+    --text: #1a1d3a;
+    --muted: #8b8fa8;
+    --border: #e2e6f3;
+    --radius: 16px;
+    --shadow: 0 4px 20px rgba(91,110,245,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #5b6ef5 0%, #7c3aed 100%);
+    padding: 20px 20px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    top: -40px; right: -40px;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    bottom: -10px; left: 30px;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .app-title { color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .today-badge {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .header-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+  }
+  .header-subtitle { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 2px; position: relative; z-index: 1; }
+
+  /* ── TABS ── */
+  .tabs {
+    background: var(--surface);
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .tab {
+    flex: 1;
+    padding: 14px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab.active { color: var(--primary); border-color: var(--primary); }
+  .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* ── VIEWS ── */
+  .view { display: none; padding: 16px; }
+  .view.active { display: block; }
+
+  /* ── DAY SELECTOR ── */
+  .day-selector {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+  }
+  .day-selector::-webkit-scrollbar { display: none; }
+  .day-btn {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .day-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 4px 14px rgba(91,110,245,0.35);
+  }
+  .day-btn .day-letter { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+  .day-btn.active .day-letter { color: rgba(255,255,255,0.75); }
+  .day-btn .day-name { font-size: 13px; font-weight: 800; color: var(--text); margin-top: 2px; }
+  .day-btn.active .day-name { color: white; }
+  .day-btn .note-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 4px; }
+  .day-btn.active .note-dot { background: rgba(255,255,255,0.8); }
+
+  /* ── SCHEDULE BLOCKS ── */
+  .schedule-section-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .schedule-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 40px 20px;
+    font-weight: 600;
+  }
+  .schedule-empty .emoji { font-size: 40px; display: block; margin-bottom: 10px; }
+
+  .subject-block {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .subject-block:active { transform: scale(0.98); }
+  .subject-block .time-col { text-align: center; min-width: 48px; }
+  .subject-block .time-start { font-size: 14px; font-weight: 800; color: var(--text); }
+  .subject-block .time-end { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .subject-block .subject-name { font-size: 16px; font-weight: 800; }
+  .subject-block .subject-teacher { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 1px; }
+  .subject-block .subject-room { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: auto; flex-shrink: 0; opacity: 0.8; }
+
+  /* ── NOTES ── */
+  .notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+  .notes-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .add-note-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(91,110,245,0.3);
+  }
+  .note-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    position: relative;
+    border-top: 3px solid var(--accent);
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .note-text { font-size: 14px; font-weight: 600; line-height: 1.5; }
+  .note-time { font-size: 11px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+  .note-delete {
+    position: absolute;
+    top: 10px; right: 12px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+  }
+  .note-empty { color: var(--muted); font-size: 13px; font-weight: 600; padding: 8px 0; }
+
+  /* ── WEEKLY VIEW ── */
+  .week-grid { display: flex; flex-direction: column; gap: 10px; }
+  .week-day-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .week-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--primary-light);
+    cursor: pointer;
+    user-select: none;
+  }
+  .week-day-name { font-size: 15px; font-weight: 800; color: var(--primary); }
+  .week-day-count { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .week-day-body { padding: 10px 14px; display: none; }
+  .week-day-body.open { display: block; }
+  .week-mini-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .week-mini-block:last-child { border-bottom: none; }
+  .week-mini-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .week-mini-time { font-size: 12px; color: var(--muted); font-weight: 700; min-width: 40px; }
+  .week-mini-subject { font-size: 13px; font-weight: 800; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%;
+    max-width: 480px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 20px; }
+  .modal-title { font-size: 18px; font-weight: 900; margin-bottom: 16px; }
+  .modal-textarea {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    resize: none;
+    height: 110px;
+    outline: none;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .modal-textarea:focus { border-color: var(--primary); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-cancel {
+    flex: 1; padding: 14px; border-radius: 14px;
+    background: var(--bg); border: none;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px;
+    cursor: pointer; color: var(--muted);
+  }
+  .btn-save {
+    flex: 2; padding: 14px; border-radius: 14px;
+    background: var(--primary); border: none;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 15px;
+    cursor: pointer; color: white;
+    box-shadow: 0 4px 14px rgba(91,110,245,0.35);
+  }
+
+  /* ── EDIT SUBJECT MODAL ── */
+  .modal-input {
+    width: 100%; padding: 12px 14px; border: 2px solid var(--border);
+    border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 15px;
+    font-weight: 600; outline: none; color: var(--text); margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--primary); }
+  .modal-row { display: flex; gap: 8px; }
+  .modal-row .modal-input { flex: 1; }
+  .modal-label { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
+  .color-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .color-swatch {
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    border: 3px solid transparent; transition: border-color 0.15s;
+  }
+  .color-swatch.selected { border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <span class="app-title">Horario Escolar</span>
+    <span class="today-badge" id="todayBadge"></span>
+  </div>
+  <div class="header-title" id="headerTitle">📚 Mi Horario</div>
+  <div class="header-subtitle" id="headerSubtitle">Seleccioná un día para ver las materias</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('daily')"><span class="tab-icon">📅</span>Día</div>
+  <div class="tab" onclick="switchTab('weekly')"><span class="tab-icon">🗓️</span>Semana</div>
+</div>
+
+<!-- DAILY VIEW -->
+<div class="view active" id="view-daily">
+  <div class="day-selector" id="daySelector"></div>
+
+  <div class="schedule-section-title">CLASES</div>
+  <div id="scheduleList"></div>
+
+  <div class="notes-header">
+    <span class="notes-title">📝 NOTAS DEL DÍA</span>
+    <button class="add-note-btn" onclick="openNoteModal()">+ Nota</button>
+  </div>
+  <div id="notesList"></div>
+</div>
+
+<!-- WEEKLY VIEW -->
+<div class="view" id="view-weekly">
+  <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📝 Nueva nota</div>
+    <textarea class="modal-textarea" id="noteTextarea" placeholder="Escribí tu nota acá..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNoteModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveNote()">Guardar nota</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT SUBJECT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editModalTitle">✏️ Editar materia</div>
+    <label class="modal-label">Materia</label>
+    <input class="modal-input" id="editSubjectName" placeholder="Ej: Matemática">
+    <label class="modal-label">Docente</label>
+    <input class="modal-input" id="editTeacher" placeholder="Ej: Prof. García">
+    <div class="modal-row">
+      <div style="flex:1">
+        <label class="modal-label">Inicio</label>
+        <input class="modal-input" id="editStart" type="time">
+      </div>
+      <div style="flex:1">
+        <label class="modal-label">Fin</label>
+        <input class="modal-input" id="editEnd" type="time">
+      </div>
+    </div>
+    <label class="modal-label">Aula</label>
+    <input class="modal-input" id="editRoom" placeholder="Ej: 3B">
+    <label class="modal-label">Color</label>
+    <div class="color-picker" id="colorPicker"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveSubject()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────
+// DATA
+// ────────────────────────────────────────────
+const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const DAY_LETTERS = ['L','Ma','Mi','J','V'];
+const EXIT_TIMES = {
+  Lunes: '17:00 hs',
+  Martes: '13:00 hs',
+  Miércoles: '17:00 hs',
+  Jueves: '17:00 hs',
+  Viernes: '11:50 hs',
+};
+const COLORS = ['#5b6ef5','#ff6b9d','#22c55e','#f59e0b','#06b6d4','#8b5cf6','#ef4444','#ec4899'];
+
+const DEFAULT_SCHEDULE = {
+  Lunes: [
+    {name:'Introducción a la Física',teacher:'Prof. Daneri',start:'07:40',end:'09:40',room:'',color:'#5b6ef5'},
+    {name:'Historia',teacher:'Prof. Barallobre',start:'09:50',end:'11:50',room:'',color:'#f59e0b'},
+    {name:'Campo de Deportes',teacher:'',start:'13:00',end:'16:30',room:'',color:'#22c55e'},
+  ],
+  Martes: [
+    {name:'Matemáticas',teacher:'Prof. Siri',start:'07:40',end:'09:40',room:'',color:'#5b6ef5'},
+    {name:'Literatura',teacher:'Prof. Del Priore',start:'09:50',end:'11:50',room:'',color:'#ff6b9d'},
+    {name:'UTN',teacher:'',start:'12:00',end:'13:00',room:'',color:'#8b5cf6'},
+  ],
+  Miércoles: [
+    {name:'Salud y Adolescencia',teacher:'Prof. Backhoven',start:'07:40',end:'09:40',room:'',color:'#06b6d4'},
+    {name:'Geografía',teacher:'Prof. Olivera',start:'09:50',end:'11:50',room:'',color:'#f59e0b'},
+    {name:'Matemática',teacher:'Prof. Siri',start:'12:00',end:'13:00',room:'',color:'#5b6ef5'},
+    {name:'Inglés adicional',teacher:'',start:'14:00',end:'17:00',room:'',color:'#ec4899'},
+  ],
+  Jueves: [
+    {name:'Química',teacher:'Prof. Daneri',start:'07:40',end:'09:40',room:'',color:'#ef4444'},
+    {name:'Inglés',teacher:'Prof. Mole',start:'09:50',end:'11:50',room:'',color:'#06b6d4'},
+    {name:'Literatura',teacher:'Prof. Del Priore',start:'12:00',end:'13:00',room:'',color:'#ff6b9d'},
+    {name:'Taller de Matemática',teacher:'Prof. Ortiz',start:'13:00',end:'14:00',room:'',color:'#5b6ef5'},
+    {name:'Inglés adicional',teacher:'',start:'14:00',end:'17:00',room:'',color:'#ec4899'},
+  ],
+  Viernes: [
+    {name:'NTICX',teacher:'Prof. Garcete',start:'07:40',end:'09:40',room:'',color:'#8b5cf6'},
+    {name:'Biología',teacher:'Prof. Backhoven',start:'09:50',end:'11:50',room:'',color:'#22c55e'},
+  ],
+};
+
+let schedule = JSON.parse(localStorage.getItem('school_schedule') || 'null') || DEFAULT_SCHEDULE;
+let notes = JSON.parse(localStorage.getItem('school_notes') || '{}');
+let selectedDay = DAYS[0];
+let editingKey = null; // {day, idx} or {day, idx:-1} for new
+let selectedColor = COLORS[0];
+
+function save() {
+  localStorage.setItem('school_schedule', JSON.stringify(schedule));
+  localStorage.setItem('school_notes', JSON.stringify(notes));
+}
+
+// ────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────
+window.onload = () => {
+  const today = new Date().getDay(); // 0=Sun
+  const todayMap = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes'};
+  if (todayMap[today]) selectedDay = todayMap[today];
+
+  const dIdx = new Date().getDay();
+  const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  document.getElementById('todayBadge').textContent = dayNames[dIdx];
+
+  renderDaySelector();
+  renderSchedule();
+  renderNotes();
+  renderWeekly();
+  buildColorPicker();
+};
+
+// ────────────────────────────────────────────
+// TABS
+// ────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='daily') || (i===1 && tab==='weekly')));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  if (tab === 'weekly') renderWeekly();
+}
+
+// ────────────────────────────────────────────
+// DAY SELECTOR
+// ────────────────────────────────────────────
+function renderDaySelector() {
+  const el = document.getElementById('daySelector');
+  el.innerHTML = DAYS.map((d, i) => {
+    const hasNote = notes[d] && notes[d].length > 0;
+    return `<div class="day-btn ${d===selectedDay?'active':''}" onclick="selectDay('${d}')">
+      <span class="day-letter">${DAY_LETTERS[i]}</span>
+      <span class="day-name">${d.slice(0,3)}</span>
+      ${hasNote ? '<div class="note-dot"></div>' : '<div style="height:6px;margin-top:4px"></div>'}
+    </div>`;
+  }).join('');
+  document.getElementById('headerTitle').textContent = '📚 ' + selectedDay;
+  const count = (schedule[selectedDay]||[]).length;
+  document.getElementById('headerSubtitle').textContent = count + ' materia' + (count!==1?'s':'') + ' hoy';
+}
+
+function selectDay(day) {
+  selectedDay = day;
+  renderDaySelector();
+  renderSchedule();
+  renderNotes();
+}
+
+// ────────────────────────────────────────────
+// SCHEDULE
+// ────────────────────────────────────────────
+function renderSchedule() {
+  const el = document.getElementById('scheduleList');
+  const subjects = schedule[selectedDay] || [];
+  if (subjects.length === 0) {
+    el.innerHTML = `<div class="schedule-empty"><span class="emoji">🎉</span>Sin clases este día</div>`;
+    return;
+  }
+  el.innerHTML = subjects.map((s, i) => {
+    const c = s.color || COLORS[0];
+    const light = c + '18';
+    return `<div class="subject-block" style="border-left-color:${c}; background:${light}" onclick="openEditModal('${selectedDay}',${i})">
+      <div class="time-col">
+        <div class="time-start">${s.start}</div>
+        <div class="time-end">${s.end}</div>
+      </div>
+      <div style="flex:1">
+        <div class="subject-name" style="color:${c}">${s.name}</div>
+        <div class="subject-teacher">${s.teacher || ''}</div>
+      </div>
+      ${s.room ? `<div class="subject-room" style="background:${c}20;color:${c}">🚪 ${s.room}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Add "+" button at the bottom
+  el.innerHTML += `<div style="text-align:center;margin:6px 0 16px">
+    <button onclick="openEditModal('${selectedDay}',-1)" style="background:none;border:2px dashed var(--border);color:var(--muted);font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;padding:10px 24px;border-radius:12px;cursor:pointer;width:100%">
+      + Agregar materia
+    </button>
+  </div>`;
+
+  // Exit time badge
+  const exit = EXIT_TIMES[selectedDay];
+  if (exit) {
+    el.innerHTML += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff8f0;border:2px solid #f59e0b;border-radius:14px;padding:12px 16px;margin-bottom:8px">
+      <span style="font-size:20px">🚪</span>
+      <span style="font-size:14px;font-weight:800;color:#b45309">Sale a las ${exit}</span>
+    </div>`;
+  }
+}
+
+// ────────────────────────────────────────────
+// NOTES
+// ────────────────────────────────────────────
+function renderNotes() {
+  const el = document.getElementById('notesList');
+  const dayNotes = notes[selectedDay] || [];
+  if (dayNotes.length === 0) {
+    el.innerHTML = '<p class="note-empty">Sin notas para este día.</p>';
+    return;
+  }
+  el.innerHTML = dayNotes.map((n, i) => `
+    <div class="note-card">
+      <button class="note-delete" onclick="deleteNote(${i})">✕</button>
+      <div class="note-text">${escHtml(n.text)}</div>
+      <div class="note-time">${n.time}</div>
+    </div>
+  `).join('');
+}
+
+function openNoteModal() {
+  document.getElementById('noteTextarea').value = '';
+  document.getElementById('noteModal').classList.add('open');
+  setTimeout(() => document.getElementById('noteTextarea').focus(), 350);
+}
+function closeNoteModal() { document.getElementById('noteModal').classList.remove('open'); }
+function saveNote() {
+  const text = document.getElementById('noteTextarea').value.trim();
+  if (!text) return;
+  if (!notes[selectedDay]) notes[selectedDay] = [];
+  notes[selectedDay].push({ text, time: new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) });
+  save();
+  closeNoteModal();
+  renderNotes();
+  renderDaySelector();
+}
+function deleteNote(idx) {
+  notes[selectedDay].splice(idx, 1);
+  save();
+  renderNotes();
+  renderDaySelector();
+}
+
+// ────────────────────────────────────────────
+// WEEKLY VIEW
+// ────────────────────────────────────────────
+function renderWeekly() {
+  const el = document.getElementById('weekGrid');
+  el.innerHTML = DAYS.map(d => {
+    const subjects = schedule[d] || [];
+    return `<div class="week-day-card">
+      <div class="week-day-header" onclick="toggleWeekDay(this)">
+        <span class="week-day-name">${d}</span>
+        <span class="week-day-count">${subjects.length} materia${subjects.length!==1?'s':''} →</span>
+      </div>
+      <div class="week-day-body">
+        ${subjects.length === 0 ? '<p style="color:var(--muted);font-size:13px;font-weight:600;padding:4px 0">Sin clases</p>' :
+          subjects.map(s => `<div class="week-mini-block">
+            <div class="week-mini-dot" style="background:${s.color||COLORS[0]}"></div>
+            <div class="week-mini-time">${s.start}</div>
+            <div class="week-mini-subject" style="color:${s.color||COLORS[0]}">${s.name}</div>
+          </div>`).join('')
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWeekDay(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ────────────────────────────────────────────
+// EDIT SUBJECT
+// ────────────────────────────────────────────
+function buildColorPicker() {
+  document.getElementById('colorPicker').innerHTML = COLORS.map(c =>
+    `<div class="color-swatch ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+  ).join('');
+}
+function selectColor(c) {
+  selectedColor = c;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('selected', s.style.background === c || s.style.backgroundColor === c));
+}
+
+function openEditModal(day, idx) {
+  editingKey = { day, idx };
+  const isNew = idx === -1;
+  document.getElementById('editModalTitle').textContent = isNew ? '➕ Nueva materia' : '✏️ Editar materia';
+
+  if (!isNew) {
+    const s = schedule[day][idx];
+    document.getElementById('editSubjectName').value = s.name;
+    document.getElementById('editTeacher').value = s.teacher || '';
+    document.getElementById('editStart').value = s.start;
+    document.getElementById('editEnd').value = s.end;
+    document.getElementById('editRoom').value = s.room || '';
+    selectedColor = s.color || COLORS[0];
+  } else {
+    document.getElementById('editSubjectName').value = '';
+    document.getElementById('editTeacher').value = '';
+    document.getElementById('editStart').value = '08:00';
+    document.getElementById('editEnd').value = '09:30';
+    document.getElementById('editRoom').value = '';
+    selectedColor = COLORS[0];
+  }
+  buildColorPicker();
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+function saveSubject() {
+  const { day, idx } = editingKey;
+  const name = document.getElementById('editSubjectName').value.trim();
+  if (!name) return;
+  const obj = {
+    name,
+    teacher: document.getElementById('editTeacher').value.trim(),
+    start: document.getElementById('editStart').value,
+    end: document.getElementById('editEnd').value,
+    room: document.getElementById('editRoom').value.trim(),
+    color: selectedColor
+  };
+  if (!schedule[day]) schedule[day] = [];
+  if (idx === -1) schedule[day].push(obj);
+  else schedule[day][idx] = obj;
+
+  // sort by start time
+  schedule[day].sort((a,b) => a.start.localeCompare(b.start));
+
+  save();
+  closeEditModal();
+  renderDaySelector();
+  renderSchedule();
+}
+
+// ────────────────────────────────────────────
+// UTILS
+// ────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modals on overlay click
+document.getElementById('noteModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeNoteModal(); });
+document.getElementById('editModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeEditModal(); });
+</script>
+</body>
+</html>
