@@ -428,8 +428,8 @@ const DAY_LETTERS = ['L','Ma','Mi','J','V'];
 const EXIT_TIMES = {
   Lunes: '17:00 hs',
   Martes: '13:00 hs',
-  Miércoles: '17:00 hs',
-  Jueves: '17:00 hs',
+  Miércoles: '13:00 hs',
+  Jueves: '14:00 hs',
   Viernes: '11:50 hs',
 };
 const COLORS = ['#5b6ef5','#ff6b9d','#22c55e','#f59e0b','#06b6d4','#8b5cf6','#ef4444','#ec4899'];
@@ -449,14 +449,12 @@ const DEFAULT_SCHEDULE = {
     {name:'Salud y Adolescencia',teacher:'Prof. Backhoven',start:'07:40',end:'09:40',room:'',color:'#06b6d4'},
     {name:'Geografía',teacher:'Prof. Olivera',start:'09:50',end:'11:50',room:'',color:'#f59e0b'},
     {name:'Matemática',teacher:'Prof. Siri',start:'12:00',end:'13:00',room:'',color:'#5b6ef5'},
-    {name:'Inglés adicional',teacher:'',start:'14:00',end:'17:00',room:'',color:'#ec4899'},
   ],
   Jueves: [
     {name:'Química',teacher:'Prof. Daneri',start:'07:40',end:'09:40',room:'',color:'#ef4444'},
     {name:'Inglés',teacher:'Prof. Mole',start:'09:50',end:'11:50',room:'',color:'#06b6d4'},
     {name:'Literatura',teacher:'Prof. Del Priore',start:'12:00',end:'13:00',room:'',color:'#ff6b9d'},
     {name:'Taller de Matemática',teacher:'Prof. Ortiz',start:'13:00',end:'14:00',room:'',color:'#5b6ef5'},
-    {name:'Inglés adicional',teacher:'',start:'14:00',end:'17:00',room:'',color:'#ec4899'},
   ],
   Viernes: [
     {name:'NTICX',teacher:'Prof. Garcete',start:'07:40',end:'09:40',room:'',color:'#8b5cf6'},
@@ -483,9 +481,11 @@ window.onload = () => {
   const todayMap = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes'};
   if (todayMap[today]) selectedDay = todayMap[today];
 
-  const dIdx = new Date().getDay();
+  const now = new Date();
+  const dIdx = now.getDay();
   const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  document.getElementById('todayBadge').textContent = dayNames[dIdx];
+  const monthNames = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('todayBadge').textContent = dayNames[dIdx] + ' ' + now.getDate() + ' ' + monthNames[now.getMonth()];
 
   renderDaySelector();
   renderSchedule();
